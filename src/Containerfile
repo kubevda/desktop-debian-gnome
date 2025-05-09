@@ -64,7 +64,6 @@ RUN set -exu \
         patch -p1 --forward < $patch || true; \
       done \
   && mk-build-deps --tool "apt-get -yq -o Debug::pkgProblemResolver=yes --no-install-recommends" -ir "/gnome-remote-desktop/debian/control" \
-  && dch -n \
   && DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -uc -us \
   && dpkg -i ../gnome-remote-desktop*.deb \
   && dpkg -P gnome-remote-desktop-build-deps \
