@@ -60,10 +60,10 @@ RUN set -exu \
   && export DEBEMAIL="pers.edwin@gmail.com" \
   && mkdir -pv /grd-build/ || true \
   && cd /grd-build/ || exit 1 \
-  && wget http://deb.debian.org/debian/pool/main/g/gnome-remote-desktop/gnome-remote-desktop_48.0.orig.tar.xz --output-document=/grd-build/gnome-remote-desktop_48.0.orig.tar.xz \
+  && wget http://deb.debian.org/debian/pool/main/g/gnome-remote-desktop/gnome-remote-desktop_48.0.orig.tar.xz --output-document=/grd-build/gnome-remote-desktop_48.0-1.orig.tar.xz \
   && wget http://deb.debian.org/debian/pool/main/g/gnome-remote-desktop/gnome-remote-desktop_48.0-1.dsc --output-document=/grd-build/gnome-remote-desktop_48.0-1.dsc \
   && wget http://deb.debian.org/debian/pool/main/g/gnome-remote-desktop/gnome-remote-desktop_48.0-1.debian.tar.xz --output-document=/grd-build/gnome-remote-desktop_48.0-1.debian.tar.xzc \
-  && tar xvf gnome-remote-desktop_48.0.orig.tar.xz \
+  && tar xvf gnome-remote-desktop_48.0-1.orig.tar.xz \
   && tar xvf gnome-remote-desktop_48.0-1.debian.tar.xzc \
   && mv debian gnome-remote-desktop-48.0/ \
   && cd gnome-remote-desktop-48.0/ \
