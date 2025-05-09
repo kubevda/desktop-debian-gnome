@@ -65,6 +65,7 @@ RUN set -exu \
   && wget http://deb.debian.org/debian/pool/main/g/gnome-remote-desktop/gnome-remote-desktop_48.0-1.debian.tar.xz --output-document=/grd-build/gnome-remote-desktop_48.0-1.debian.tar.xzc \
   && tar xvf gnome-remote-desktop_48.0-1.orig.tar.xz \
   && tar xvf gnome-remote-desktop_48.0-1.debian.tar.xzc \
+  && ln -s gnome-remote-desktop_48.0-1.orig.tar.xz gnome-remote-desktop_48.0-1-kubevda.orig.tar.xz \
   && mv debian gnome-remote-desktop-48.0/ \
   && cd gnome-remote-desktop-48.0/ \
   && for patch in /grd-build/patches/*.patch; do \
