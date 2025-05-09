@@ -73,7 +73,7 @@ RUN set -exu \
         patch -p1 --forward < $patch || true; \
       done \
   && cp /grd-build/patches/*.patch debian/patches/ \
-  && ls debian/patches/*.patch | tee debian/patches/series \
+  && $(cd debian/patches && ls *.patch) | tee debian/patches/series \
   && mk-build-deps --tool "apt-get -yq -o Debug::pkgProblemResolver=yes --no-install-recommends" -ir "/grd-build/gnome-remote-desktop-48.0/debian/control" \
   && dch --preserve --local "-kubevda-" "build with VNC support for kubevda" \
   && DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -uc -us \
