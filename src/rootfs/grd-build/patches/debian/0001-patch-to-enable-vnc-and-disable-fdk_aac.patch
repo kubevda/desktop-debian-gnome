@@ -1,0 +1,327 @@
+From 764161041c39f55e4e7d1981ea1deda8e0c0ba32 Mon Sep 17 00:00:00 2001
+From: Edwin Pers <pers.edwin@gmail.com>
+Date: Fri, 9 May 2025 16:10:26 -0400
+Subject: [PATCH] patch to enable vnc and disable fdk_aac
+
+---
+ debian/control              |   1 +
+ debian/patches/fdkaac.patch | 274 ------------------------------------
+ debian/patches/series       |   1 -
+ debian/rules                |   2 +-
+ 4 files changed, 2 insertions(+), 276 deletions(-)
+ delete mode 100644 debian/patches/fdkaac.patch
+
+diff --git a/debian/control b/debian/control
+index b052561..bcbc8d3 100644
+--- a/debian/control
++++ b/debian/control
+@@ -32,6 +32,7 @@ Build-Depends: asciidoc-base,
+                libtss2-dev,
+                libva-dev,
+                libvulkan-dev (>= 1.2.0),
++               libvncserver-dev,
+                libxkbcommon-dev (>= 1.0.0),
+                meson (>= 0.47.0),
+                mutter (>= 48~beta) <!nocheck>,
+diff --git a/debian/patches/fdkaac.patch b/debian/patches/fdkaac.patch
+deleted file mode 100644
+index 49b2422..0000000
+--- a/debian/patches/fdkaac.patch
++++ /dev/null
+@@ -1,274 +0,0 @@
+-From: =?utf-8?q?Jeremy_B=C3=ADcha?= <jeremy.bicha@canonical.com>
+-Date: Wed, 13 Mar 2024 16:06:41 -0400
+-Subject: Revert "rdp-dsp: Stop making fdk-aac optional"
+-
+-This reverts commit b70ae574d0b8e8b4804d460bae77232a24397841.
+-
+-Forwarded: not-needed
+-
+-Upstream knows that we still need this patch, perhaps hoping that
+-the additional pressure will help get fdk-aac into Debian
+-but that is up to the ftpmasters, not the gnome-remote-desktop packagers
+----
+- config.h.meson               |  3 +++
+- meson.build                  | 14 +++++++++++++-
+- meson_options.txt            |  5 +++++
+- src/grd-rdp-audio-playback.c |  4 ++++
+- src/grd-rdp-dsp.c            | 25 ++++++++++++++++++++++++-
+- src/meson.build              |  7 ++++++-
+- 6 files changed, 55 insertions(+), 3 deletions(-)
+-
+-diff --git a/config.h.meson b/config.h.meson
+-index 439a12b..2febd94 100644
+---- a/config.h.meson
+-+++ b/config.h.meson
+-@@ -9,6 +9,9 @@
+- /* Defined if LIBSYSTEMD is supported */
+- #mesondefine HAVE_LIBSYSTEMD
+- 
+-+/* Defined if FDK AAC is available */
+-+#mesondefine HAVE_FDK_AAC
+-+
+- /* Defined if RDP backend enabled */
+- #mesondefine HAVE_RDP
+- 
+-diff --git a/meson.build b/meson.build
+-index ae8e375..2acd77d 100644
+---- a/meson.build
+-+++ b/meson.build
+-@@ -37,6 +37,7 @@ tss2_rc_dep = dependency('tss2-rc')
+- tss2_tctildr_dep = dependency('tss2-tctildr')
+- xkbcommon_dep = dependency('xkbcommon', version: xkbcommon_req)
+- 
+-+have_fdk_aac = get_option('fdk_aac')
+- have_rdp = get_option('rdp')
+- have_vnc = get_option('vnc')
+- 
+-@@ -44,13 +45,16 @@ if not have_rdp and not have_vnc
+-   error('Must enable at least one backend')
+- endif
+- 
+-+if have_fdk_aac and not have_rdp
+-+  error('Support for audio output redirection using FDK AAC requires the RDP backend')
+-+endif
+-+
+- if have_rdp
+-   add_global_arguments('-D_GNU_SOURCE', language : 'c')
+- 
+-   dl_dep = cc.find_library('dl', required: true)
+- 
+-   cuda_dep = dependency('ffnvcodec', version: cuda_req)
+--  fdk_aac_dep = dependency('fdk-aac')
+-   freerdp_dep = dependency('freerdp3', version: freerdp_req)
+-   freerdp_client_dep = dependency('freerdp-client3', version: freerdp_req)
+-   freerdp_server_dep = dependency('freerdp-server3', version: freerdp_req)
+-@@ -61,6 +65,9 @@ if have_rdp
+-   polkit_dep = dependency('polkit-gobject-1', version: polkit_req)
+-   vulkan_dep = dependency('vulkan', version: vulkan_req)
+-   winpr_dep = dependency('winpr3', version: freerdp_req)
+-+  if have_fdk_aac
+-+    fdk_aac_dep = dependency('fdk-aac')
+-+  endif
+- 
+-   glslc = find_program('glslc', required: true)
+-   spirv_opt = find_program('spirv-opt', required: true)
+-@@ -105,6 +112,7 @@ cdata.set_quoted('VERSION', meson.project_version())
+- cdata.set('HAVE_LIBSYSTEMD', libsystemd_dep.found())
+- cdata.set('HAVE_RDP', have_rdp)
+- cdata.set('HAVE_VNC', have_vnc)
+-+cdata.set('HAVE_FDK_AAC', have_fdk_aac)
+- 
+- cdata.set_quoted('GRD_DATA_DIR', grd_datadir)
+- cdata.set_quoted('GRD_LIBEXEC_DIR', libexecdir)
+-@@ -197,6 +205,10 @@ output = [
+-   '        RDP...................... ' + have_rdp.to_string(),
+-   '        VNC...................... ' + have_vnc.to_string(),
+-   '',
+-+  '    Options for the RDP backend:',
+-+  '',
+-+  '        Support for audio output redirection using FDK AAC........' + have_fdk_aac.to_string(),
+-+  '',
+-   '  Now type \'ninja -C ' + meson.project_build_root() + '\' to build ' + meson.project_name(),
+-   '',
+-   '',
+-diff --git a/meson_options.txt b/meson_options.txt
+-index c003176..b0b279d 100644
+---- a/meson_options.txt
+-+++ b/meson_options.txt
+-@@ -8,6 +8,11 @@ option('tests',
+-        value: true,
+-        description: 'Build the test suite')
+- 
+-+option('fdk_aac',
+-+       type: 'boolean',
+-+       value: true,
+-+       description: 'Audio output redirection for the RDP backend')
+-+
+- option('rdp',
+-        type: 'boolean',
+-        value: true,
+-diff --git a/src/grd-rdp-audio-playback.c b/src/grd-rdp-audio-playback.c
+-index 8422659..7293b83 100644
+---- a/src/grd-rdp-audio-playback.c
+-+++ b/src/grd-rdp-audio-playback.c
+-@@ -541,7 +541,9 @@ static const AUDIO_FORMAT audio_format_pcm =
+- 
+- static AUDIO_FORMAT server_formats[] =
+- {
+-+#ifdef HAVE_FDK_AAC
+-   audio_format_aac,
+-+#endif /* HAVE_FDK_AAC */
+-   audio_format_opus,
+-   audio_format_pcm,
+- };
+-@@ -639,9 +641,11 @@ rdpsnd_activated (RdpsndServerContext *rdpsnd_context)
+-     {
+-       AUDIO_FORMAT *audio_format = &rdpsnd_context->client_formats[i];
+- 
+-+#ifdef HAVE_FDK_AAC
+-       if (audio_playback->aac_client_format_idx < 0 &&
+-           are_audio_formats_equal (audio_format, &audio_format_aac))
+-         audio_playback->aac_client_format_idx = i;
+-+#endif /* HAVE_FDK_AAC */
+-       if (audio_playback->opus_client_format_idx < 0 &&
+-           are_audio_formats_equal (audio_format, &audio_format_opus))
+-         audio_playback->opus_client_format_idx = i;
+-diff --git a/src/grd-rdp-dsp.c b/src/grd-rdp-dsp.c
+-index f83d5c5..987316e 100644
+---- a/src/grd-rdp-dsp.c
+-+++ b/src/grd-rdp-dsp.c
+-@@ -21,10 +21,13 @@
+- 
+- #include "grd-rdp-dsp.h"
+- 
+--#include <fdk-aac/aacenc_lib.h>
+- #include <gio/gio.h>
+- #include <opus/opus.h>
+- 
+-+#ifdef HAVE_FDK_AAC
+-+#include <fdk-aac/aacenc_lib.h>
+-+#endif /* HAVE_FDK_AAC */
+-+
+- #define G711_QUANT_MASK 0xF
+- #define G711_SEG_MASK 0x70
+- #define G711_SEG_SHIFT 4
+-@@ -36,8 +39,10 @@ struct _GrdRdpDsp
+-   GrdRdpDspCreateFlag create_flags;
+-   uint32_t n_channels;
+- 
+-+#ifdef HAVE_FDK_AAC
+-   HANDLE_AACENCODER aac_encoder;
+-   uint32_t aac_frame_length;
+-+#endif /* HAVE_FDK_AAC */
+- 
+-   OpusEncoder *opus_encoder;
+-   uint32_t opus_frame_length;
+-@@ -74,7 +79,11 @@ grd_rdp_dsp_get_frames_per_packet (GrdRdpDsp      *rdp_dsp,
+-     case GRD_RDP_DSP_CODEC_NONE:
+-       g_assert_not_reached ();
+-     case GRD_RDP_DSP_CODEC_AAC:
+-+#ifdef HAVE_FDK_AAC
+-       return rdp_dsp->aac_frame_length;
+-+#else
+-+      g_assert_not_reached ();
+-+#endif /* HAVE_FDK_AAC */
+-     case GRD_RDP_DSP_CODEC_ALAW:
+-       g_assert_not_reached ();
+-     case GRD_RDP_DSP_CODEC_OPUS:
+-@@ -84,6 +93,7 @@ grd_rdp_dsp_get_frames_per_packet (GrdRdpDsp      *rdp_dsp,
+-   g_assert_not_reached ();
+- }
+- 
+-+#ifdef HAVE_FDK_AAC
+- static gboolean
+- encode_aac (GrdRdpDsp  *rdp_dsp,
+-             int16_t    *input_data,
+-@@ -139,6 +149,7 @@ encode_aac (GrdRdpDsp  *rdp_dsp,
+- 
+-   return TRUE;
+- }
+-+#endif /* HAVE_FDK_AAC */
+- 
+- static gboolean
+- encode_opus (GrdRdpDsp  *rdp_dsp,
+-@@ -189,8 +200,13 @@ grd_rdp_dsp_encode (GrdRdpDsp       *rdp_dsp,
+-       g_assert_not_reached ();
+-       return FALSE;
+-     case GRD_RDP_DSP_CODEC_AAC:
+-+#ifdef HAVE_FDK_AAC
+-       return encode_aac (rdp_dsp, input_data, input_size, input_elem_size,
+-                          output_data, output_size);
+-+#else
+-+      g_assert_not_reached ();
+-+      return FALSE;
+-+#endif /* HAVE_FDK_AAC */
+-     case GRD_RDP_DSP_CODEC_ALAW:
+-       g_assert_not_reached ();
+-       return FALSE;
+-@@ -278,6 +294,7 @@ grd_rdp_dsp_decode (GrdRdpDsp       *rdp_dsp,
+-   return FALSE;
+- }
+- 
+-+#ifdef HAVE_FDK_AAC
+- static gboolean
+- create_aac_encoder (GrdRdpDsp  *rdp_dsp,
+-                     uint32_t    n_samples_per_sec,
+-@@ -397,6 +414,7 @@ create_aac_encoder (GrdRdpDsp  *rdp_dsp,
+- 
+-   return TRUE;
+- }
+-+#endif /* HAVE_FDK_AAC */
+- 
+- static gboolean
+- create_opus_encoder (GrdRdpDsp  *rdp_dsp,
+-@@ -441,12 +459,15 @@ create_encoders (GrdRdpDsp                  *rdp_dsp,
+- {
+-   rdp_dsp->n_channels = dsp_descriptor->n_channels;
+- 
+-+#ifdef HAVE_FDK_AAC
+-   if (!create_aac_encoder (rdp_dsp,
+-                            dsp_descriptor->n_samples_per_sec_aac,
+-                            dsp_descriptor->n_channels,
+-                            dsp_descriptor->bitrate_aac,
+-                            error))
+-     return FALSE;
+-+#endif /* HAVE_FDK_AAC */
+-+
+-   if (!create_opus_encoder (rdp_dsp,
+-                             dsp_descriptor->n_samples_per_sec_opus,
+-                             dsp_descriptor->n_channels,
+-@@ -480,7 +501,9 @@ grd_rdp_dsp_dispose (GObject *object)
+- 
+-   g_clear_pointer (&rdp_dsp->opus_encoder, opus_encoder_destroy);
+- 
+-+#ifdef HAVE_FDK_AAC
+-   aacEncClose (&rdp_dsp->aac_encoder);
+-+#endif /* HAVE_FDK_AAC */
+- 
+-   G_OBJECT_CLASS (grd_rdp_dsp_parent_class)->dispose (object);
+- }
+-diff --git a/src/meson.build b/src/meson.build
+-index bfc2b6a..938bdab 100644
+---- a/src/meson.build
+-+++ b/src/meson.build
+-@@ -216,7 +216,6 @@ if have_rdp
+-   deps += [
+-     cuda_dep,
+-     dl_dep,
+--    fdk_aac_dep,
+-     freerdp_dep,
+-     freerdp_server_dep,
+-     fuse_dep,
+-@@ -226,6 +225,12 @@ if have_rdp
+-     vulkan_dep,
+-     winpr_dep,
+-   ]
+-+
+-+  if (have_fdk_aac)
+-+    deps += [
+-+      fdk_aac_dep,
+-+    ]
+-+  endif
+- endif
+- 
+- if have_vnc
+diff --git a/debian/patches/series b/debian/patches/series
+index 0f2b6a0..e69de29 100644
+--- a/debian/patches/series
++++ b/debian/patches/series
+@@ -1 +0,0 @@
+-fdkaac.patch
+diff --git a/debian/rules b/debian/rules
+index f72b00c..8558bb6 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -12,7 +12,7 @@ export DEB_LDFLAGS_MAINT_APPEND = -Wl,-O1 -Wl,-z,defs
+ # https://launchpad.net/bugs/1977614
+ override_dh_auto_configure:
+ 	dh_auto_configure -- \
+-		-Dfdk_aac=false \
++		-Dvnc=true \
+ 		-Dtests=$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),false,true)
+ 
+ # We manually handle tmpfiles & sysusers in postinst
+-- 
+2.39.5
+
