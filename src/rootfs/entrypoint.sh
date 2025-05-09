@@ -66,12 +66,16 @@ EOF
 echo pts/1 >> /etc/securetty
 
 mkdir -pv /run/dbus
+mkdir -pv "/run/user/${UID}"
+chown "${UID}":"${UID}" "/run/user/${UID}"
 
 /usr/bin/dbus-daemon --system --nofork --nopidfile &
 
-/usr/bin/dbus-launch grdctl --headless vnc set-auth-method none
-/usr/bin/dbus-launch grdctl --headless vnc disable-view-only
-/usr/bin/dbus-launch grdctl --headless vnc enable
+sudo -u epers /usr/bin/dbus-launch grdctl --headless vnc set-auth-method password
+sudo -u epers /usr/bin/dbus-launch grdctl --headless vnc clear-password
+sudo -u epers /usr/bin/dbus-launch grdctl --headless vnc disable-view-only
+sudo -u epers /usr/bin/dbus-launch grdctl --headless vnc enable
+sudo -u epers /usr/bin/dbus-launch grdctl --headless vnc status
 
 pkill dbus-daemon
 
