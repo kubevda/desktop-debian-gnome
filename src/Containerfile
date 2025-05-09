@@ -38,6 +38,7 @@ RUN set -exu \
       socat \
       sudo \
       supervisor \
+      task-gnome-desktop \
       tasksel \
       tigervnc-standalone-server \
       tzdata \
@@ -49,10 +50,6 @@ RUN set -exu \
       xwaylandvideobridge \
       xz-utils \
       yq
-
-RUN set -exu \
-  && export DEBIAN_FRONTEND=noninteractive \
-  && tasksel install gnome-desktop
 
 RUN set -exu \
   && mkdir -pv /var/log/supervisor \
