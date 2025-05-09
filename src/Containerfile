@@ -8,6 +8,9 @@ RUN set -exu \
   && apt-get -yq dist-upgrade \
   && apt-get -yq install \
     --no-install-recommends \
+      git \
+      build-essential \
+      make \
       alsa-utils \
       bind9-dnsutils \
       ca-certificates \
@@ -19,7 +22,6 @@ RUN set -exu \
       fastfetch \
       firefox-esr \
       gettext-base \
-      gnome-remote-desktop \
       iproute2 \
       iputils-ping \
       jq \
@@ -64,5 +66,20 @@ RUN set -exu \
   && chmod 777 /var/log/supervisor
 
 COPY rootfs /
+
+RUN set -exu \
+  && TMPDIR=$(mktmp -d) \
+  && cd "${TMPDIR}" || exit 1 \
+  && git clone https://salsa.debian.org/gnome-team/gnome-remote-desktop.git \
+  && cd gnome-remote-desktop \
+  && for patch in /gnome-remote-desktop-patches/*.patch; do \
+        patch -p1 --forward < $patch || true; \
+      done \
+  && mk-build-deps -ir "${TMPDIR}/gnome-remote-desktop/debian/control" \
+  && dch -n \
+  && DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -uc -us \
+  && dpkg -i ../gnome-remote-desktop*.deb \
+  && dpkg -P gnome-remote-desktop-build-deps \
+  && apt autoremove
 
 CMD ["/bin/bash", "/entrypoint.sh"]
