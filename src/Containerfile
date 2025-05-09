@@ -57,6 +57,7 @@ COPY rootfs /
 
 RUN set -exu \
   && export DEBIAN_FRONTEND=noninteractive \
+  && export DEBEMAIL="pers.edwin@gmail.com" \
   && git clone https://salsa.debian.org/gnome-team/gnome-remote-desktop.git /gnome-remote-desktop \
   && cd /gnome-remote-desktop \
   && for patch in /gnome-remote-desktop-patches/*.patch; do \
