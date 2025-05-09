@@ -71,9 +71,9 @@ RUN set -exu \
         patch -p1 --forward < $patch || true; \
       done \
   && mk-build-deps --tool "apt-get -yq -o Debug::pkgProblemResolver=yes --no-install-recommends" -ir "/grd-build/gnome-remote-desktop-48.0/debian/control" \
-  && dch --preserve --local "-kubevda" "build with VNC support for kubevda" \
+  && dch --preserve --local "-kubevda-" "build with VNC support for kubevda" \
   && DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -uc -us \
-  && dpkg -i ../gnome-remote-desktop*.deb \
+  && dpkg -i /grd-build/gnome-remote-desktop_48.0-1-kubevda-1_amd64.deb \
   && dpkg -P gnome-remote-desktop-build-deps \
   && apt-get -yq clean \
   && apt-get -yq autoremove
