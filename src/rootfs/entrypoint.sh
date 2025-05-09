@@ -67,11 +67,13 @@ echo pts/1 >> /etc/securetty
 
 mkdir -pv /run/dbus
 
+/usr/bin/dbus-daemon --system --nofork --nopidfile &
+
 grdctl vnc set-auth-method none
 grdctl vnc disable-view-only
 grdctl vnc enable
 
-socat "unix-listen:${DISPLAY_SOCK_ADDR}" tcp-connect:localhost:3814,forever,interval=10,fork
+pkill dbus-daemon
 
 /usr/bin/supervisord \
   -n \
