@@ -1,4 +1,4 @@
-FROM docker.io/ubuntu:noble
+FROM docker.io/debian:trixie-slim
 
 RUN set -exu \
   && export DEBIAN_FRONTEND=noninteractive \
