@@ -69,9 +69,11 @@ RUN set -exu \
   && ln -s gnome-remote-desktop_48.0-1.orig.tar.xz gnome-remote-desktop_48.0-1-kubevda.orig.tar.xz \
   && mv debian gnome-remote-desktop-48.0/ \
   && cd gnome-remote-desktop-48.0/ \
-  && for patch in /grd-build/patches/*.patch; do \
+  && for patch in /grd-build/patches/debian/*.patch; do \
         patch -p1 --forward < $patch || true; \
       done \
+  && cp /grd-build/patches/*.patch debian/patches/ \
+  && ls debian/patches/*.patch | tee debian/patches/series \
   && mk-build-deps --tool "apt-get -yq -o Debug::pkgProblemResolver=yes --no-install-recommends" -ir "/grd-build/gnome-remote-desktop-48.0/debian/control" \
   && dch --preserve --local "-kubevda-" "build with VNC support for kubevda" \
   && DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -uc -us \
