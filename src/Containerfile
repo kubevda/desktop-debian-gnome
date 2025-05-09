@@ -54,14 +54,12 @@ RUN set -exu \
 COPY rootfs /
 
 RUN set -exu \
-  && TMPDIR=$(mktmp -d) \
-  && cd "${TMPDIR}" || exit 1 \
-  && git clone https://salsa.debian.org/gnome-team/gnome-remote-desktop.git \
-  && cd gnome-remote-desktop \
+  && git clone https://salsa.debian.org/gnome-team/gnome-remote-desktop.git /gnome-remote-desktop \
+  && cd /gnome-remote-desktop \
   && for patch in /gnome-remote-desktop-patches/*.patch; do \
         patch -p1 --forward < $patch || true; \
       done \
-  && mk-build-deps -ir "${TMPDIR}/gnome-remote-desktop/debian/control" \
+  && mk-build-deps -ir "/gnome-remote-desktop/debian/control" \
   && dch -n \
   && DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -uc -us \
   && dpkg -i ../gnome-remote-desktop*.deb \
