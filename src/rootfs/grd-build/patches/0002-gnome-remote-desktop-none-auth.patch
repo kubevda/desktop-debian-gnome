@@ -1,0 +1,51 @@
+diff --git a/src/grd-enums.h b/src/grd-enums.h
+index ffab821..f360366 100644
+--- a/src/grd-enums.h
++++ b/src/grd-enums.h
+@@ -24,7 +24,8 @@
+ typedef enum
+ {
+   GRD_VNC_AUTH_METHOD_PROMPT,
+-  GRD_VNC_AUTH_METHOD_PASSWORD
++  GRD_VNC_AUTH_METHOD_PASSWORD,
++  GRD_VNC_AUTH_METHOD_NONE
+ } GrdVncAuthMethod;
+ 
+ #endif /* GRD_ENUMS_H */
+diff --git a/src/grd-session-vnc.c b/src/grd-session-vnc.c
+index 4cdc379..5f3de78 100644
+--- a/src/grd-session-vnc.c
++++ b/src/grd-session-vnc.c
+@@ -291,6 +291,11 @@ handle_new_client (rfbClientPtr rfb_client)
+        */
+       session_vnc->rfb_screen->authPasswdData = (gpointer) 1;
+ 
++      return RFB_CLIENT_ACCEPT;
++    case GRD_VNC_AUTH_METHOD_NONE:
++      session_vnc->auth_method = rfbNoAuth;
++      grd_session_start (session_vnc);
++      grd_session_vnc_detach_source (session_vnc);
+       return RFB_CLIENT_ACCEPT;
+     }
+ 
+@@ -476,6 +481,8 @@ check_rfb_password (rfbClientPtr  rfb_client,
+     {
+     case GRD_VNC_AUTH_METHOD_PROMPT:
+       return TRUE;
++    case GRD_VNC_AUTH_METHOD_NONE:
++      return TRUE;
+     case GRD_VNC_AUTH_METHOD_PASSWORD:
+       break;
+     }
+diff --git a/src/org.gnome.desktop.remote-desktop.gschema.xml.in b/src/org.gnome.desktop.remote-desktop.gschema.xml.in
+index b8934d5..0e5093b 100644
+--- a/src/org.gnome.desktop.remote-desktop.gschema.xml.in
++++ b/src/org.gnome.desktop.remote-desktop.gschema.xml.in
+@@ -28,6 +28,7 @@
+ 		      person with physical access to the workstation to
+ 		      explicitly approve the new connection.
+ 	 * password - by requiring the remote client to provide a known password
++	 * none - without any authentication at all
+       </description>
+     </key>
+   </schema>

@@ -18,14 +18,10 @@ useradd \
 
 usermod \
   -a -G \
-    adm,sudo,video,audio,tty,users,xpra,pulse \
+    adm,sudo,video,audio,tty,users \
       "${USER}"
 
 passwd -d "${USER}"
-
-echo "Setting up pulseaudio"
-mkdir -pv "${HOME}/.config/pulse"
-echo "load-module module-native-protocol-unix auth-anonymous=1" > "${HOME}/.config/pulse/default.pa"
 
 echo "Setting up /run/user/${UID}"
 mkdir -p "/run/user/${UID}"
@@ -54,28 +50,15 @@ chown -Rv "${USER}":"${GROUP}" "$(dirname ${DISPLAY_SOCK_ADDR})"
 echo "Granting ${USER} ownership of ${HOME}"
 chown -Rv "${USER}":"${GROUP}" "${HOME}"
 
-# Allow an automatic shell at the pts. This will trigger systemd-user.
-cat << EOF | tee /etc/pam.d/login
-auth       sufficient   pam_listfile.so item=tty sense=allow file=/etc/securetty onerr=fail apply=${USER}
-auth       required     pam_securetty.so
-auth       requisite    pam_nologin.so
--session   optional     pam_loginuid.so
--session   optional     pam_systemd.so
-EOF
-
-echo pts/1 >> /etc/securetty
-
 mkdir -pv /run/dbus
-mkdir -pv "/run/user/${UID}"
-chown "${UID}":"${UID}" "/run/user/${UID}"
 
 /usr/bin/dbus-daemon --system --nofork --nopidfile &
 
-sudo -u epers /usr/bin/dbus-launch grdctl --headless vnc set-auth-method password
+sudo -u epers /usr/bin/dbus-launch grdctl --headless vnc set-auth-method none
 sudo -u epers /usr/bin/dbus-launch grdctl --headless vnc clear-password
 sudo -u epers /usr/bin/dbus-launch grdctl --headless vnc disable-view-only
 sudo -u epers /usr/bin/dbus-launch grdctl --headless vnc enable
-sudo -u epers /usr/bin/dbus-launch grdctl --headless vnc status
+sudo -u epers /usr/bin/dbus-launch grdctl --headless status
 
 pkill dbus-daemon
 

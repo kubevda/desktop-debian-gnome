@@ -47,6 +47,7 @@ RUN set -exu \
       xwayland-run \
       xwaylandvideobridge \
       xz-utils \
+      ibus-daemon \
       yq
 
 RUN set -exu \
