@@ -8,11 +8,9 @@ RUN set -exu \
   && apt-get -yq dist-upgrade \
   && apt-get -yq install \
     --no-install-recommends \
-      git \
-      build-essential \
-      make \
       alsa-utils \
       bind9-dnsutils \
+      build-essential \
       ca-certificates \
       coreutils \
       curl \
@@ -22,11 +20,13 @@ RUN set -exu \
       fastfetch \
       firefox-esr \
       gettext-base \
+      git \
       iproute2 \
       iputils-ping \
       jq \
       libgl1-mesa-dri \
       locales \
+      make \
       mesa-utils \
       mingetty \
       nano \
@@ -38,6 +38,7 @@ RUN set -exu \
       socat \
       sudo \
       supervisor \
+      tasksel \
       tigervnc-standalone-server \
       tzdata \
       udev \
@@ -50,16 +51,8 @@ RUN set -exu \
       yq
 
 RUN set -exu \
-  && wget -O "/usr/share/keyrings/xpra.asc" https://xpra.org/xpra.asc \
-  && wget -O "/etc/apt/sources.list.d/xpra.sources" \
-      https://raw.githubusercontent.com/Xpra-org/xpra/master/packaging/repos/trixie/xpra-beta.sources \
-  && apt-get -yq update \
-  && apt-get -yq install \
-      --no-install-recommends \
-        xpra
-
-RUN set -exu \
-  && apt-get -yq clean
+  && export DEBIAN_FRONTEND=noninteractive \
+  && tasksel install gnome-desktop
 
 RUN set -exu \
   && mkdir -pv /var/log/supervisor \
@@ -80,6 +73,7 @@ RUN set -exu \
   && DEB_BUILD_OPTIONS=nocheck dpkg-buildpackage -uc -us \
   && dpkg -i ../gnome-remote-desktop*.deb \
   && dpkg -P gnome-remote-desktop-build-deps \
-  && apt autoremove
+  && apt-get -yq clean \
+  && apt-get -yq autoremove
 
 CMD ["/bin/bash", "/entrypoint.sh"]
