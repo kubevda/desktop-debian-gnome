@@ -17,6 +17,7 @@ RUN set -exu \
       dbus \
       dbus-x11 \
       devscripts \
+      equivs \
       expect-dev \
       fastfetch \
       firefox-esr \
