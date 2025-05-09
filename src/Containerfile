@@ -32,15 +32,11 @@ RUN set -exu \
       nano \
       net-tools \
       openssl \
-      paprefs \
-      pavucontrol \
-      pulseaudio \
       socat \
       sudo \
       supervisor \
       task-gnome-desktop \
       tasksel \
-      tigervnc-standalone-server \
       tzdata \
       udev \
       vim \

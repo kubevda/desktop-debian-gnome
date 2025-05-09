@@ -69,9 +69,9 @@ mkdir -pv /run/dbus
 
 /usr/bin/dbus-daemon --system --nofork --nopidfile &
 
-grdctl --headless vnc set-auth-method none
-grdctl --headless vnc disable-view-only
-grdctl --headless vnc enable
+/usr/bin/dbus-launch grdctl --headless vnc set-auth-method none
+/usr/bin/dbus-launch grdctl --headless vnc disable-view-only
+/usr/bin/dbus-launch grdctl --headless vnc enable
 
 pkill dbus-daemon
 
